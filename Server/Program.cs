@@ -38,7 +38,7 @@ class RecipeServer
             {
                 if (!_clientRequests.ContainsKey(clientKey))
                     _clientRequests[clientKey] = new List<DateTime>();
-                // Видалити старі запити
+
                 _clientRequests[clientKey].RemoveAll(dt => dt < DateTime.UtcNow - TimeWindow);
                 if (_clientRequests[clientKey].Count >= MaxRequestsPerHour)
                 {
