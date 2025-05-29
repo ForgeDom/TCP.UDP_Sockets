@@ -1,14 +1,4 @@
-﻿using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -17,6 +7,9 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Threading;
+using System.IO;
+using System.Windows;
+using System.Text;
 
 namespace WpfServer;
 
@@ -27,6 +20,8 @@ public partial class MainWindow : Window
 {
     private ObservableCollection<ClientInfo> _clients = new();
     private CancellationTokenSource _cts = new();
+    private readonly string _logFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ServerLog.txt");
+
     public MainWindow()
     {
         InitializeComponent();
@@ -37,6 +32,12 @@ public partial class MainWindow : Window
     private void StartServer()
     {
         Task.Run(() => RunServer(_cts.Token));
+    }
+
+    private void Log(string message)
+    {
+        var logLine = string.Format("[{0:yyyy-MM-dd HH:mm:ss}] {1}\n", DateTime.Now, message);
+        File.AppendAllText(_logFile, logLine);
     }
 
     private async Task RunServer(CancellationToken token)
@@ -53,12 +54,16 @@ public partial class MainWindow : Window
         };
         const int MaxConcurrentClients = 5;
         TimeSpan ClientTimeout = TimeSpan.FromMinutes(10);
+        Log($"Сервер запущено на порті {port}");
         while (!token.IsCancellationRequested)
         {
             var now = DateTime.UtcNow;
             var inactive = activeClients.Where(kv => now - kv.Value > ClientTimeout).Select(kv => kv.Key).ToList();
             foreach (var key in inactive)
+            {
+                Log($"Клієнт {key} відключений через неактивність");
                 activeClients.Remove(key);
+            }
             UpdateClientsUI(activeClients);
 
             if (udpClient.Available > 0)
@@ -69,11 +74,13 @@ public partial class MainWindow : Window
                 {
                     if (activeClients.Count >= MaxConcurrentClients)
                     {
+                        Log($"Відмовлено клієнту {clientKey}: перевищено ліміт {MaxConcurrentClients}");
                         var limitMsg = Encoding.UTF8.GetBytes($"Перевищено ліміт одночасних клієнтів: {MaxConcurrentClients}");
                         udpClient.Send(limitMsg, limitMsg.Length, result.RemoteEndPoint);
                         continue;
                     }
                     activeClients[clientKey] = DateTime.UtcNow;
+                    Log($"Підключено нового клієнта: {clientKey}");
                 }
                 else
                 {
@@ -81,14 +88,23 @@ public partial class MainWindow : Window
                 }
                 UpdateClientsUI(activeClients);
 
-                var request = Encoding.UTF8.GetString(result.Buffer);
-                var ingredients = request.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                var foundRecipes = recipes.Where(r => ingredients.All(i => r.Value.Contains(i, StringComparer.OrdinalIgnoreCase)))
-                                         .Select(r => r.Key)
-                                         .ToList();
-                string response = foundRecipes.Count > 0 ? string.Join(", ", foundRecipes) : "Рецептів не знайдено";
-                var responseBytes = Encoding.UTF8.GetBytes(response);
-                await udpClient.SendAsync(responseBytes, responseBytes.Length, result.RemoteEndPoint);
+                try
+                {
+                    var request = Encoding.UTF8.GetString(result.Buffer);
+                    Log($"Запит від {clientKey}: '{request}'");
+                    var ingredients = request.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    var foundRecipes = recipes.Where(r => ingredients.All(i => r.Value.Contains(i, StringComparer.OrdinalIgnoreCase)))
+                                             .Select(r => r.Key)
+                                             .ToList();
+                    string response = foundRecipes.Count > 0 ? string.Join(", ", foundRecipes) : "Рецептів не знайдено";
+                    Log($"Відповідь для {clientKey}: '{response}'");
+                    var responseBytes = Encoding.UTF8.GetBytes(response);
+                    await udpClient.SendAsync(responseBytes, responseBytes.Length, result.RemoteEndPoint);
+                }
+                catch (Exception ex)
+                {
+                    Log($"Помилка обробки запиту від {clientKey}: {ex.Message}");
+                }
             }
             await Task.Delay(500);
         }
