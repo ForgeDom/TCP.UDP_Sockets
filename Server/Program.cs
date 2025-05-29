@@ -12,6 +12,9 @@ class RecipeServer
     private readonly Dictionary<string, List<DateTime>> _clientRequests = new();
     private const int MaxRequestsPerHour = 10;
     private static readonly TimeSpan TimeWindow = TimeSpan.FromHours(1);
+    private readonly Dictionary<string, DateTime> _activeClients = new();
+    private const int MaxConcurrentClients = 5;
+    private static readonly TimeSpan ClientTimeout = TimeSpan.FromMinutes(10);
 
     public RecipeServer(int port)
     {
@@ -32,8 +35,37 @@ class RecipeServer
         Console.WriteLine($"UDP сервер запущено на порті {_port}");
         while (true)
         {
+            // Очищення неактивних клієнтів
+            lock (_activeClients)
+            {
+                var now = DateTime.UtcNow;
+                var inactive = _activeClients.Where(kv => now - kv.Value > ClientTimeout).Select(kv => kv.Key).ToList();
+                foreach (var key in inactive)
+                    _activeClients.Remove(key);
+            }
+
             var result = await _udpClient.ReceiveAsync();
             var clientKey = result.RemoteEndPoint.ToString();
+
+            // Перевірка ліміту підключень
+            lock (_activeClients)
+            {
+                if (!_activeClients.ContainsKey(clientKey))
+                {
+                    if (_activeClients.Count >= MaxConcurrentClients)
+                    {
+                        var limitMsg = Encoding.UTF8.GetBytes($"Перевищено ліміт одночасних клієнтів: {MaxConcurrentClients}");
+                        _udpClient.Send(limitMsg, limitMsg.Length, result.RemoteEndPoint);
+                        continue;
+                    }
+                    _activeClients[clientKey] = DateTime.UtcNow;
+                }
+                else
+                {
+                    _activeClients[clientKey] = DateTime.UtcNow;
+                }
+            }
+
             lock (_clientRequests)
             {
                 if (!_clientRequests.ContainsKey(clientKey))
