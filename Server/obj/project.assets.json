@@ -14,11 +14,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\VS\\RiderProjects\\TCP.UDP_Sockets\\TCP.UDP_Sockets\\TCP.UDP_Sockets.csproj",
-      "projectName": "TCP.UDP_Sockets",
-      "projectPath": "E:\\VS\\RiderProjects\\TCP.UDP_Sockets\\TCP.UDP_Sockets\\TCP.UDP_Sockets.csproj",
+      "projectUniqueName": "E:\\VS\\RiderProjects\\TCP.UDP_Sockets\\Server\\Server.csproj",
+      "projectName": "Server",
+      "projectPath": "E:\\VS\\RiderProjects\\TCP.UDP_Sockets\\Server\\Server.csproj",
       "packagesPath": "C:\\Users\\пк\\.nuget\\packages\\",
-      "outputPath": "E:\\VS\\RiderProjects\\TCP.UDP_Sockets\\TCP.UDP_Sockets\\obj\\",
+      "outputPath": "E:\\VS\\RiderProjects\\TCP.UDP_Sockets\\Server\\obj\\",
       "projectStyle": "PackageReference",
       "UsingMicrosoftNETSdk": false,
       "fallbackFolders": [

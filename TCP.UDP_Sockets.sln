@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TCP.UDP_Sockets", "TCP.UDP_Sockets\TCP.UDP_Sockets.csproj", "{C0C20C58-E9D2-45E2-A088-6B8821665995}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csproj", "{C0C20C58-E9D2-45E2-A088-6B8821665995}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{73B2B50B-2BCF-4329-A4A7-573A7E26CF57}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -12,5 +14,9 @@ Global
 		{C0C20C58-E9D2-45E2-A088-6B8821665995}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0C20C58-E9D2-45E2-A088-6B8821665995}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C0C20C58-E9D2-45E2-A088-6B8821665995}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73B2B50B-2BCF-4329-A4A7-573A7E26CF57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73B2B50B-2BCF-4329-A4A7-573A7E26CF57}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73B2B50B-2BCF-4329-A4A7-573A7E26CF57}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73B2B50B-2BCF-4329-A4A7-573A7E26CF57}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
