@@ -9,6 +9,9 @@ class RecipeServer
     private readonly int _port;
     private readonly UdpClient _udpClient;
     private readonly Dictionary<string, List<string>> _recipes;
+    private readonly Dictionary<string, List<DateTime>> _clientRequests = new();
+    private const int MaxRequestsPerHour = 10;
+    private static readonly TimeSpan TimeWindow = TimeSpan.FromHours(1);
 
     public RecipeServer(int port)
     {
@@ -30,6 +33,21 @@ class RecipeServer
         while (true)
         {
             var result = await _udpClient.ReceiveAsync();
+            var clientKey = result.RemoteEndPoint.ToString();
+            lock (_clientRequests)
+            {
+                if (!_clientRequests.ContainsKey(clientKey))
+                    _clientRequests[clientKey] = new List<DateTime>();
+                // Видалити старі запити
+                _clientRequests[clientKey].RemoveAll(dt => dt < DateTime.UtcNow - TimeWindow);
+                if (_clientRequests[clientKey].Count >= MaxRequestsPerHour)
+                {
+                    var limitMsg = Encoding.UTF8.GetBytes($"Перевищено ліміт: не більше {MaxRequestsPerHour} запитів на годину");
+                    _udpClient.Send(limitMsg, limitMsg.Length, result.RemoteEndPoint);
+                    continue;
+                }
+                _clientRequests[clientKey].Add(DateTime.UtcNow);
+            }
             var request = Encoding.UTF8.GetString(result.Buffer);
             Console.WriteLine($"Отримано запит від {result.RemoteEndPoint}: {request}");
             var ingredients = request.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
