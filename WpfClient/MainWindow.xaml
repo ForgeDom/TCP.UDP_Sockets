@@ -18,6 +18,9 @@
             <Button x:Name="SendButton" Content="Надіслати" Width="100" Margin="10,0,0,0" Click="SendButton_Click"/>
         </StackPanel>
         <TextBlock Text="Відповідь сервера:" FontWeight="Bold" Grid.Row="1"/>
-        <TextBox x:Name="ResponseBox" Grid.Row="2" Margin="0,10,0,0" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+        <StackPanel Grid.Row="2" Margin="0,10,0,0">
+            <TextBox x:Name="ResponseBox" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Height="100"/>
+            <Image x:Name="RecipeImage" Height="200" Stretch="Uniform" Margin="0,10,0,0"/>
+        </StackPanel>
     </Grid>
 </Window>
